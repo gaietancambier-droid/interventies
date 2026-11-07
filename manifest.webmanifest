@@ -1,0 +1,13 @@
+{
+  "name": "Interventies Post Waregem",
+  "short_name": "Interventies",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#a81d1a",
+  "theme_color": "#c8302c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

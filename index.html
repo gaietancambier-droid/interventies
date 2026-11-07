@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interventies</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Interventies">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f3f3f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111110" media="(prefers-color-scheme: dark)">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f3f3f1;
+    --surface: #fcfcfb;
+    --border: #e4e3df;
+    --grid: #ecebe7;
+    --text-1: #0b0b0b;
+    --text-2: #52514e;
+    --text-3: #7a7973;
+    --bar: #2a78d6;
+    --bar-hover: #1d5fae;
+    --accent: #c8302c;
+    --warn-bg: #fff4e0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #111110;
+      --surface: #1a1a19;
+      --border: #2c2c2a;
+      --grid: #262624;
+      --text-1: #f0efec;
+      --text-2: #c3c2b7;
+      --text-3: #8f8e86;
+      --bar: #3987e5;
+      --bar-hover: #6aa6ee;
+      --accent: #e66767;
+      --warn-bg: #3a2e14;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { overflow-x: hidden; max-width: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text-1);
+    font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg);
+    padding: 12px 16px 0; border-bottom: 1px solid var(--border); }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  h1 small { color: var(--text-3); font-weight: 400; font-size: 13px; margin-left: 6px; }
+  nav { display: flex; gap: 4px; }
+  nav button { flex: 1; border: 0; background: none; padding: 10px 4px; font: inherit;
+    color: var(--text-2); border-bottom: 2px solid transparent; cursor: pointer; }
+  nav button.actief { color: var(--text-1); border-color: var(--accent); font-weight: 600; }
+  main { padding: 16px; max-width: 1100px; margin: 0 auto; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  select, input, textarea, .knop { font: inherit; color: var(--text-1); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+  .knop { cursor: pointer; }
+  .knop.hoofd { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+  .tegels { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .tegel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+  .tegel .lbl { color: var(--text-2); font-size: 13px; }
+  .tegel .val { font-size: 28px; font-weight: 650; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .tegel .val.klein { font-size: 16px; font-weight: 600; margin-top: 6px; }
+  .raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+  .kaart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; min-width: 0; }
+  .kaart h2 { font-size: 15px; margin: 0 0 10px; }
+  .kaart h2 span { color: var(--text-3); font-weight: 400; }
+  .breed { grid-column: 1 / -1; }
+
+  /* verticale staven */
+  .vbar { display: flex; align-items: flex-end; gap: 4px; height: 180px; padding-top: 18px;
+    border-bottom: 1px solid var(--text-3); overflow-x: auto; }
+  .vbar .kol { flex: 1 0 22px; display: flex; flex-direction: column; justify-content: flex-end;
+    align-items: center; height: 100%; position: relative; cursor: default; }
+  .vbar .staaf { width: 70%; max-width: 44px; background: var(--bar); border-radius: 4px 4px 0 0; min-height: 0; }
+  .vbar .kol:hover .staaf, .vbar .kol.aan .staaf { background: var(--bar-hover); }
+  .vbar .num { font-size: 11px; color: var(--text-2); margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+  .vlabels { display: flex; gap: 4px; overflow: hidden; }
+  .vlabels div { flex: 1 0 22px; text-align: center; font-size: 11px; color: var(--text-3); padding-top: 4px; white-space: nowrap; }
+
+  /* horizontale staven */
+  .hbar { display: grid; grid-template-columns: minmax(90px, 40%) 1fr; gap: 6px 10px; align-items: center; }
+  .hbar .naam { font-size: 13px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hbar .spoor { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .hbar .staaf { height: 14px; background: var(--bar); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .hbar .spoor:hover .staaf { background: var(--bar-hover); }
+  .hbar .num { font-size: 12px; color: var(--text-1); font-variant-numeric: tabular-nums; }
+  .meer { margin-top: 8px; font-size: 13px; background: none; border: 0; color: var(--bar); cursor: pointer; padding: 0; }
+  .leeg { color: var(--text-3); font-size: 13px; }
+
+  #tip { position: fixed; pointer-events: none; background: var(--text-1); color: var(--surface);
+    font-size: 12px; padding: 5px 8px; border-radius: 6px; opacity: 0; transition: opacity .1s; z-index: 20; }
+
+  /* lijst */
+  .item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+  .item.fout { background: var(--warn-bg); }
+  .item .kop { display: flex; justify-content: space-between; gap: 8px; }
+  .item .type { font-weight: 600; }
+  .item .wanneer { color: var(--text-3); font-size: 13px; white-space: nowrap; }
+  .item .info { color: var(--text-2); font-size: 13px; margin-top: 2px; }
+  .item .opm { color: var(--text-3); font-size: 13px; margin-top: 4px; }
+  .item .acties { display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+  .item .acties select { padding: 4px 8px; font-size: 13px; }
+  .item .acties button { font-size: 13px; padding: 4px 10px; }
+  .chip { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--border); color: var(--text-2); margin-right: 4px; }
+
+  textarea { width: 100%; min-height: 160px; }
+  .hint { color: var(--text-3); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td, th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  .verborgen { display: none !important; }
+  #login { max-width: 420px; margin: 40px auto; }
+  #login label { display: block; font-size: 13px; color: var(--text-2); margin: 12px 0 4px; }
+  #login input { width: 100%; }
+  #login .fout { color: var(--accent); font-size: 13px; margin-top: 10px; }
+  .instel { background: none; border: 0; color: var(--text-3); font: inherit; font-size: 13px; cursor: pointer; float: right; margin-top: 4px; }
+  #status { color: var(--text-3); font-size: 13px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Interventies <small id="ondertitel">Post Waregem</small><button class="instel" id="instel" title="Instellingen">⚙︎</button></h1>
+  <nav>
+    <button data-tab="overzicht" class="actief">Overzicht</button>
+    <button data-tab="lijst">Lijst</button>
+    <button data-tab="toevoegen">Toevoegen</button>
+  </nav>
+</header>
+
+<main>
+  <div id="login" class="kaart verborgen">
+    <h2>Eerste keer instellen</h2>
+    <p class="hint">Vul eenmalig de link van je Google web-app (eindigt op /exec) en je geheime sleutel in. Ze worden enkel op dit toestel bewaard.</p>
+    <label for="lUrl">Web-app-link</label>
+    <input id="lUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+    <label for="lSleutel">Geheime sleutel</label>
+    <input id="lSleutel" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <p><button class="knop hoofd" id="lOpslaan">Verbinden</button></p>
+    <div class="fout" id="lFout"></div>
+  </div>
+  <div id="status">Laden…</div>
+
+  <section id="tab-overzicht">
+    <div class="filters">
+      <select id="fJaar" aria-label="Jaar"></select>
+      <select id="fCat" aria-label="Soort"></select>
+      <select id="fGem" aria-label="Gemeente"></select>
+    </div>
+    <div class="tegels" id="tegels"></div>
+    <div class="raster">
+      <div class="kaart breed"><h2>Per maand <span id="maandSub"></span></h2><div id="gMaand"></div></div>
+      <div class="kaart"><h2>Per trimester</h2><div id="gTrim"></div></div>
+      <div class="kaart breed"><h2>Betaalde uren per maand <span id="urenSub"></span></h2><div id="gUrenMaand"></div></div>
+      <div class="kaart"><h2>Betaalde uren per trimester</h2><div id="gUrenTrim"></div></div>
+      <div class="kaart"><h2>Per soort</h2><div id="gCat"></div></div>
+      <div class="kaart"><h2>Per type</h2><div id="gType"></div></div>
+      <div class="kaart"><h2>Per gemeente</h2><div id="gGem"></div></div>
+      <div class="kaart"><h2>Per ploeg</h2><div id="gPloeg"></div></div>
+      <div class="kaart"><h2>Buiten de zone</h2><div id="gZone"></div></div>
+    </div>
+  </section>
+
+  <section id="tab-lijst" class="verborgen">
+    <div class="filters">
+      <input id="zoek" type="search" placeholder="Zoeken (straat, type, gemeente…)" style="flex:1;min-width:200px">
+    </div>
+    <div id="lijst"></div>
+  </section>
+
+  <section id="tab-toevoegen" class="verborgen">
+    <div class="kaart">
+      <h2>Oude sms'en toevoegen</h2>
+      <p class="hint">Plak hier een of meer sms'en van Dispatch Fluvia. Ze mogen achter elkaar staan; elk bericht dat met "Post …" begint, wordt apart herkend. Daarna vul je per bericht de datum en het uur in.</p>
+      <textarea id="plak" placeholder="Post Waregem 🚒BR BRAND GEBOUW🚒(TW War (T307)) [  bw dringend]: Marcel Windelsstraat 5, Waregem. …"></textarea>
+      <p><button class="knop" id="leesUit">Lees uit</button></p>
+      <div id="voorbeeld"></div>
+    </div>
+  </section>
+</main>
+<div id="tip"></div>
+
+<script>
+/* ---------- verbinding met Google (Apps Script) ---------- */
+const CFG_SLEUTEL = 'interventies-config';
+function leesConfig() { try { return JSON.parse(localStorage.getItem(CFG_SLEUTEL) || 'null'); } catch (e) { return null; } }
+const CONFIG = leesConfig();
+function roep(cfg, actie, args) {
+  return fetch(cfg.url, { method: 'POST', body: JSON.stringify({ sleutel: cfg.sleutel, actie, args }) })
+    .then(r => r.json())
+    .then(j => { if (!j.ok) throw new Error(j.fout === 'sleutel' ? 'Verkeerde sleutel' : (j.fout || 'Fout')); return j.resultaat; });
+}
+// Zelfde manier van aanroepen als google.script.run, zodat de rest van de pagina gelijk blijft.
+function maakRun() {
+  const h = {};
+  const p = new Proxy({}, { get(_, naam) {
+    if (naam === 'withSuccessHandler') return f => { h.s = f; return p; };
+    if (naam === 'withFailureHandler') return f => { h.f = f; return p; };
+    return (...args) => roep(CONFIG, naam, args.slice(1))
+      .then(r => h.s && h.s(r))
+      .catch(e => h.f ? h.f(e) : alert(e.message));
+  } });
+  return p;
+}
+if (CONFIG) window.google = { script: { get run() { return maakRun(); } } };
+
+function toonLogin(melding) {
+  document.getElementById('login').classList.remove('verborgen');
+  document.querySelectorAll('main > section, #status').forEach(e => e.classList.add('verborgen'));
+  const c = leesConfig();
+  if (c) { document.getElementById('lUrl').value = c.url; document.getElementById('lSleutel').value = c.sleutel; }
+  if (melding) document.getElementById('lFout').textContent = melding;
+}
+document.getElementById('lOpslaan').onclick = () => {
+  const cfg = { url: document.getElementById('lUrl').value.trim(), sleutel: document.getElementById('lSleutel').value.trim() };
+  const fout = document.getElementById('lFout');
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(cfg.url)) { fout.textContent = 'De link moet beginnen met https://script.google.com/ en eindigen op /exec'; return; }
+  fout.textContent = 'Verbinden…';
+  roep(cfg, 'haalData', []).then(() => {
+    localStorage.setItem(CFG_SLEUTEL, JSON.stringify(cfg));
+    location.reload();
+  }).catch(e => { fout.textContent = 'Lukt niet: ' + e.message; });
+};
+document.getElementById('instel').onclick = () => toonLogin();
+
+const SLEUTEL = CONFIG ? CONFIG.sleutel : '';
+const IN_GOOGLE = typeof google !== 'undefined' && google.script && google.script.run;
+
+const SOORTEN = {
+  BR: 'Brand', TI: 'Technische interventie', GS: 'Gevaarlijke stoffen',
+  LO: 'Logistiek / signalisatie', SI: 'Speciale interventie', BM: 'Bijstand medische diensten',
+  AMB: 'Ambulance', AM: 'Ambulance'
+};
+// deelgemeente -> gemeente (voor berichten waar alleen de deelgemeente staat)
+const DEELGEMEENTEN = {
+  'sint-eloois-vijve': 'Waregem', 'desselgem': 'Waregem', 'beveren': 'Waregem', 'beveren-leie': 'Waregem',
+  'ooigem': 'Wielsbeke', 'sint-baafs-vijve': 'Wielsbeke', 'olsene': 'Zulte', 'machelen': 'Zulte',
+  'wakken': 'Dentergem', 'markegem': 'Dentergem', 'oeselgem': 'Dentergem', 'bavikhove': 'Harelbeke',
+  'otegem': 'Zwevegem', 'kruishoutem': 'Kruisem', 'wortegem': 'Wortegem-Petegem', 'petegem-aan-de-schelde': 'Wortegem-Petegem'
+};
+// Stormtypes: snel opeenvolgende interventies van hetzelfde type tellen als één interventie.
+// "uren" = maximale tijd tussen twee meldingen om nog bij dezelfde interventie te horen.
+const SAMENVOEGEN = {
+  types: ['WATEROVERLAST/POMPEN', 'BOMEN/TAKKEN OPENBARE WEG'],
+  uren: 2
+};
+// Vergoeding: per blok minimum MIN_UREN, daarna +1 uur per begonnen uur.
+// Interventies die elkaar opvolgen (volgende start vóór of binnen KOPPEL_MIN minuten na het einde) vormen één blok.
+const BETALING = { minUren: 2, koppelMin: 15 };
+const ZONES = ['Centrum', 'Midwest', 'Vlaamse Ardennen'];
+const MAANDEN = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+
+let PLOEG = null;
+let DATA = [];          // uitgelezen interventies
+let OPEN = {};          // welke grafieken volledig uitgeklapt
+
+/* ---------- sms uitlezen ---------- */
+// Werkt met de verschillende formaten die Fluvia door de jaren gebruikte, bv.
+//  "Post Waregem 🚒BR BRAND GEBOUW🚒(TW War (T307)) [  bw dringend]: Straat 5, Waregem. opmerking"
+//  "Post Waregem: : [  bw bra]: BR BRAND INDUSTRIE, Gentseweg , Waregem (Sint-Eloois-Vijve). "
+//  "(AP 2 War (A336)) [  bw bra]: BR BRAND GEBOUW, Boudewijn I-laan 19, Waregem (Desselgem). "
+//  "Post Waregem 💯Bijstand medische diensten💯 (MFAP 1 War (A323)) [ [bw tec]"
+function opschonen(t) {
+  return String(t).replace(/[\p{Extended_Pictographic}️‍]/gu, ' ').replace(/[ \t]+/g, ' ').trim();
+}
+function hoofdletter(s) {
+  return String(s).toLowerCase().replace(/(^|[\s\-'(\/])(\p{L})/gu, (m, a, b) => a + b.toUpperCase()).trim();
+}
+function leesType(s) {
+  const m = String(s).trim().match(/^([A-Z]{2,3})\s+([A-Z].*)$/s);
+  if (!m) return null;
+  let omschr = m[2];
+  const buiten = /\(buiten de zone\)/i.test(omschr);
+  omschr = omschr.replace(/\s*\/\s*/g, '/').replace(/\((buiten de zone|niet snelst)\)/gi, '').replace(/\(\s*\)/g, '').replace(/\s+/g, ' ').trim();
+  return { code: m[1], type: omschr, buitenZone: buiten };
+}
+function leesVoertuig(v) {
+  v = (v || '').trim();
+  const m = v.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+  return m ? { voertuig: m[1].trim(), voertuigCode: m[2].replace('*', '').trim() } : { voertuig: v, voertuigCode: '' };
+}
+function leesAdres(rest) {
+  rest = rest.trim();
+  const k = rest.indexOf(',');
+  if (k < 0) return { adres: rest, gemeente: '', deel: '', opm: '' };
+  const adres = rest.slice(0, k).trim();
+  let na = rest.slice(k + 1).trim();
+  let gem = na, opm = '';
+  const p = na.search(/\.(\s|$)/);
+  if (p >= 0) { gem = na.slice(0, p).trim(); opm = na.slice(p + 1).trim(); }
+  let deel = '';
+  const dm = gem.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  if (dm) { gem = dm[1].trim(); deel = hoofdletter(dm[2]); }
+  gem = gem.replace(/[.,]/g, '').trim();
+  if (!gem && deel) gem = DEELGEMEENTEN[deel.toLowerCase()] || deel;
+  return { adres, gemeente: gem ? hoofdletter(gem) : '', deel, opm };
+}
+function leesSms(tekst) {
+  const t = opschonen(tekst);
+  const basis = { herkend: true, code: '', type: '', buitenZone: false, voertuig: '', voertuigCode: '', rol: '', adres: '', gemeente: '', deel: '', opm: '' };
+
+  // Bijstand medische diensten (geen adres in de sms)
+  if (/Bijstand medische diensten/i.test(t)) {
+    const v = t.match(/\(((?:[^()]|\([^()]*\))*)\)/);
+    const r = t.match(/\[\s*(?:[^\[\]]*)\[([^\]]*)\]?/) || t.match(/\[([^\]]*)\]/);
+    return Object.assign(basis, { code: 'BM', type: 'Bijstand medische diensten' },
+      leesVoertuig(v ? v[1] : ''), { rol: r ? r[1].trim() : '' });
+  }
+
+  // De "[rol]:" is in alle formaten het vaste ankerpunt
+  const rm = t.match(/\[([^\[\]]*)\]\s*:/);
+  if (!rm) return { herkend: false };
+  let voor = t.slice(0, rm.index);
+  let na = t.slice(rm.index + rm[0].length);
+  basis.rol = rm[1].replace(/\s+/g, ' ').trim();
+
+  // voertuig = laatste (...) vlak voor de [rol]
+  const vm = voor.match(/\(((?:[^()]|\([^()]*\))*)\)\s*$/);
+  if (vm) { Object.assign(basis, leesVoertuig(vm[1])); voor = voor.slice(0, vm.index); }
+
+  // type staat vóór het voertuig (nieuw formaat) of als eerste stuk na de rol (oud formaat)
+  let typ = leesType(voor.replace(/^\s*Post\s+\S+/i, '').replace(/^[\s:]+|[\s:]+$/g, ''));
+  if (!typ) {
+    const k = na.indexOf(',');
+    const kandidaat = leesType(k >= 0 ? na.slice(0, k) : na);
+    if (kandidaat) { typ = kandidaat; na = k >= 0 ? na.slice(k + 1) : ''; }
+  }
+  if (!typ) return { herkend: false };
+  Object.assign(basis, typ, leesAdres(na));
+  return basis;
+}
+function splitsSms(blok) {
+  return String(blok)
+    .split(/(?=\bPost\s+\S+\s*(?:[\p{Extended_Pictographic}]|:))/u)
+    .map(s => s.trim()).filter(Boolean);
+}
+
+/* ---------- ploeg ---------- */
+function berekenPloeg(datum) {
+  if (!PLOEG || !PLOEG.actief || !PLOEG.namen || !PLOEG.namen.length) return 'Niet ingesteld';
+  const start = new Date(PLOEG.startMoment).getTime();
+  const beurt = PLOEG.beurtUren * 3600 * 1000;
+  const n = PLOEG.namen.length;
+  const i = Math.floor((datum.getTime() - start) / beurt);
+  return PLOEG.namen[((i % n) + n) % n];
+}
+
+/* ---------- data laden ---------- */
+function verwerk(antwoord) {
+  PLOEG = antwoord.ploeg;
+  const alles = antwoord.rijen.map(r => {
+    const d = new Date(r.datum);
+    const p = leesSms(r.tekst);
+    if (p.herkend) {
+      p.soort = SOORTEN[p.code] || p.code || 'Overig';
+      if (!p.gemeente) p.gemeente = p.code === 'BM' ? 'Geen adres (medisch)' : 'Onbekend';
+    }
+    return Object.assign(p, {
+      rij: r.rij, tekst: r.tekst, datum: d,
+      ploegHand: r.ploeg,
+      ploeg: r.ploeg || berekenPloeg(d),
+      einde: r.einde ? new Date(r.einde) : null,
+      zone: r.zone || ''
+    });
+  }).sort((a, b) => a.datum - b.datum);
+  // dezelfde sms die binnen 30 minuten opnieuw gestuurd werd, telt maar één keer
+  const laatste = new Map();
+  alles.forEach(x => {
+    const k = opschonen(x.tekst);
+    const vorige = laatste.get(k);
+    x.herhaling = !!(vorige && x.datum - vorige < 30 * 60 * 1000);
+    laatste.set(k, x.datum);
+  });
+  // stormtypes samenvoegen
+  const open = {};
+  alles.forEach(x => {
+    if (x.herhaling || !x.herkend || !SAMENVOEGEN.types.includes(x.type.toUpperCase())) return;
+    const g = open[x.type];
+    if (g && x.datum - g.laatste <= SAMENVOEGEN.uren * 3600 * 1000) {
+      x.samengevoegd = true;
+      g.hoofd.extra.push(x);
+      g.laatste = x.datum;
+    } else {
+      x.extra = [];
+      open[x.type] = { hoofd: x, laatste: x.datum };
+    }
+  });
+  DATA = alles.filter(x => !x.herhaling && !x.samengevoegd).reverse();
+  const herkend = DATA.filter(x => x.herkend).length;
+  document.getElementById('status').textContent =
+    `${herkend} interventies` + (DATA.length > herkend ? ` · ${DATA.length - herkend} andere berichten (geen interventie, zie Lijst)` : '');
+  vulFilters();
+  tekenAlles();
+}
+function laad() {
+  if (IN_GOOGLE) {
+    google.script.run.withSuccessHandler(verwerk)
+      .withFailureHandler(e => toonLogin('Lukt niet: ' + e.message))
+      .haalData(SLEUTEL);
+  } else {
+    toonLogin();
+  }
+}
+
+/* ---------- filters ---------- */
+function opties(sel, waarden, alleTekst) {
+  const huidig = sel.value;
+  sel.innerHTML = `<option value="">${alleTekst}</option>` + waarden.map(v => `<option>${esc(v)}</option>`).join('');
+  if (waarden.map(String).includes(huidig)) sel.value = huidig;
+}
+function vulFilters() {
+  const h = DATA.filter(x => x.herkend);
+  const jaren = [...new Set(h.map(x => x.datum.getFullYear()))].sort((a, b) => b - a);
+  const fJ = document.getElementById('fJaar');
+  const eerder = fJ.value;
+  opties(fJ, jaren, 'Alle jaren');
+  if (!eerder && jaren.length) fJ.value = jaren[0];
+  opties(document.getElementById('fCat'), [...new Set(h.map(x => x.soort))].sort(), 'Alle soorten');
+  opties(document.getElementById('fGem'), [...new Set(h.map(x => x.gemeente))].sort(), 'Alle gemeenten');
+}
+function gefilterd() {
+  const j = document.getElementById('fJaar').value;
+  const c = document.getElementById('fCat').value;
+  const g = document.getElementById('fGem').value;
+  return DATA.filter(x => x.herkend
+    && (!j || x.datum.getFullYear() == j)
+    && (!c || x.soort === c)
+    && (!g || x.gemeente === g));
+}
+
+/* ---------- grafieken ---------- */
+function tel(lijst, sleutel) {
+  const m = new Map();
+  lijst.forEach(x => { const k = sleutel(x) || 'Onbekend'; m.set(k, (m.get(k) || 0) + 1); });
+  return [...m.entries()].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(b[0]));
+}
+function vbar(el, paren, tipLabel) {
+  if (!paren.some(p => p[1])) { el.innerHTML = '<p class="leeg">Geen interventies.</p>'; return; }
+  const max = Math.max(...paren.map(p => p[1]));
+  el.innerHTML =
+    `<div class="vbar">` + paren.map(p => { const [k, v] = p; return `
+      <div class="kol" data-tip="${esc(p[2] || tipLabel(k) + ': ' + v)}">
+         <div class="num">${v || ''}</div>
+         <div class="staaf" style="height:${max ? (v / max) * 100 : 0}%"></div>
+       </div>`; }).join('') +
+    `</div><div class="vlabels">` + paren.map(([k]) => `<div>${esc(k)}</div>`).join('') + `</div>`;
+}
+function hbar(el, id, paren, maxRijen = 8) {
+  if (!paren.length) { el.innerHTML = '<p class="leeg">Geen interventies.</p>'; return; }
+  const max = paren[0][1];
+  const totaal = paren.reduce((s, p) => s + p[1], 0);
+  const toon = OPEN[id] ? paren : paren.slice(0, maxRijen);
+  el.innerHTML = `<div class="hbar">` + toon.map(([k, v]) =>
+      `<div class="naam" title="${esc(k)}">${esc(k)}</div>
+       <div class="spoor" data-tip="${esc(k)}: ${v} (${Math.round(v / totaal * 100)}%)">
+         <div class="staaf" style="width:${(v / max) * 85}%"></div><span class="num">${v}</span>
+       </div>`).join('') + `</div>` +
+    (paren.length > maxRijen
+      ? `<button class="meer" data-open="${id}">${OPEN[id] ? 'Minder tonen' : `Alle ${paren.length} tonen`}</button>` : '');
+}
+function tekenAlles() {
+  const lijst = gefilterd();
+  const jaar = document.getElementById('fJaar').value;
+
+  // tegels
+  const nu = new Date();
+  const dezeMaand = DATA.filter(x => x.herkend && x.datum.getFullYear() === nu.getFullYear() && x.datum.getMonth() === nu.getMonth()).length;
+  const q = Math.floor(nu.getMonth() / 3);
+  const ditTrim = DATA.filter(x => x.herkend && x.datum.getFullYear() === nu.getFullYear() && Math.floor(x.datum.getMonth() / 3) === q).length;
+  const top = tel(lijst, x => x.type)[0];
+  const wespen = lijst.filter(x => /WESPEN/i.test(x.type)).length;
+  const blok = blokken(lijst);
+  const betaald = blok.reduce((t, b) => t + b.betaald, 0);
+  const werkMin = blok.reduce((t, b) => t + b.minuten, 0);
+  const metEinde = lijst.filter(x => x.einde && x.einde > x.datum).length;
+  document.getElementById('tegels').innerHTML = `
+    <div class="tegel"><div class="lbl">Totaal (zonder wespen)</div><div class="val">${lijst.length - wespen}</div></div>
+    <div class="tegel"><div class="lbl">Wespen</div><div class="val">${wespen}</div></div>
+    <div class="tegel"><div class="lbl">Deze maand</div><div class="val">${dezeMaand}</div></div>
+    <div class="tegel"><div class="lbl">Dit trimester (T${q + 1})</div><div class="val">${ditTrim}</div></div>
+    <div class="tegel"><div class="lbl">Betaalde uren (selectie)</div><div class="val">${betaald}u</div>
+      <div class="lbl" style="font-size:11px;color:var(--text-3)">werkelijk ${duur(werkMin)} · ${lijst.length - metEinde} zonder einduur (als ${BETALING.minUren}u geteld)</div></div>
+    <div class="tegel"><div class="lbl">Meest voorkomend</div><div class="val klein">${top ? esc(hoofdletter(top[0])) + ` <span style="color:var(--text-3);font-weight:400">(${top[1]})</span>` : '–'}</div></div>`;
+
+  // per maand
+  let maandParen;
+  if (jaar) {
+    maandParen = MAANDEN.map((m, i) => [m, lijst.filter(x => x.datum.getMonth() === i).length]);
+    document.getElementById('maandSub').textContent = jaar;
+    vbar(document.getElementById('gMaand'), maandParen, k => k + ' ' + jaar);
+  } else {
+    const keys = [...new Set(lijst.map(x => x.datum.getFullYear() * 12 + x.datum.getMonth()))];
+    if (keys.length) {
+      const min = Math.min(...keys), max = Math.max(...keys);
+      maandParen = [];
+      for (let k = min; k <= max; k++) {
+        maandParen.push([MAANDEN[k % 12] + " '" + String(Math.floor(k / 12)).slice(2),
+          lijst.filter(x => x.datum.getFullYear() * 12 + x.datum.getMonth() === k).length]);
+      }
+    } else maandParen = [];
+    document.getElementById('maandSub').textContent = 'alle jaren';
+    vbar(document.getElementById('gMaand'), maandParen, k => k);
+  }
+
+  // per trimester
+  if (jaar) {
+    vbar(document.getElementById('gTrim'),
+      [0, 1, 2, 3].map(i => ['T' + (i + 1), lijst.filter(x => Math.floor(x.datum.getMonth() / 3) === i).length]),
+      k => k + ' ' + jaar);
+  } else {
+    const keys = [...new Set(lijst.map(x => x.datum.getFullYear() * 4 + Math.floor(x.datum.getMonth() / 3)))];
+    const paren = [];
+    if (keys.length) for (let k = Math.min(...keys); k <= Math.max(...keys); k++) {
+      paren.push(['T' + (k % 4 + 1) + " '" + String(Math.floor(k / 4)).slice(2),
+        lijst.filter(x => x.datum.getFullYear() * 4 + Math.floor(x.datum.getMonth() / 3) === k).length]);
+    }
+    vbar(document.getElementById('gTrim'), paren, k => k);
+  }
+
+  // betaalde uren per maand / trimester
+  const urenPer = (sleutel, labels) => labels.map(([k, lbl]) => {
+    const bs = blok.filter(b => sleutel(b.start) === k);
+    const u = bs.reduce((t, b) => t + b.betaald, 0);
+    const w = bs.reduce((t, b) => t + b.minuten, 0);
+    return [lbl, u, `${lbl}: ${u}u betaald · werkelijk ${duur(w)} · ${bs.length} blok(ken)`];
+  });
+  let mLab, tLab, mKey, tKey;
+  if (jaar) {
+    mKey = d => d.getMonth(); mLab = MAANDEN.map((m, i) => [i, m]);
+    tKey = d => Math.floor(d.getMonth() / 3); tLab = [0, 1, 2, 3].map(i => [i, 'T' + (i + 1)]);
+    document.getElementById('urenSub').textContent = jaar;
+  } else {
+    mKey = d => d.getFullYear() * 12 + d.getMonth();
+    tKey = d => d.getFullYear() * 4 + Math.floor(d.getMonth() / 3);
+    const mk = blok.map(b => mKey(b.start)), tk = blok.map(b => tKey(b.start));
+    mLab = []; tLab = [];
+    if (mk.length) for (let k = Math.min(...mk); k <= Math.max(...mk); k++) mLab.push([k, MAANDEN[k % 12] + " '" + String(Math.floor(k / 12)).slice(2)]);
+    if (tk.length) for (let k = Math.min(...tk); k <= Math.max(...tk); k++) tLab.push([k, 'T' + (k % 4 + 1) + " '" + String(Math.floor(k / 4)).slice(2)]);
+    document.getElementById('urenSub').textContent = 'alle jaren';
+  }
+  vbar(document.getElementById('gUrenMaand'), urenPer(mKey, mLab), k => k);
+  vbar(document.getElementById('gUrenTrim'), urenPer(tKey, tLab), k => k);
+
+  hbar(document.getElementById('gCat'), 'cat', tel(lijst, x => x.soort));
+  hbar(document.getElementById('gType'), 'type', tel(lijst, x => hoofdletter(x.type)));
+  hbar(document.getElementById('gGem'), 'gem', tel(lijst, x => x.gemeente));
+  hbar(document.getElementById('gPloeg'), 'ploeg', tel(lijst, x => x.ploeg));
+  hbar(document.getElementById('gZone'), 'zone', tel(lijst.filter(x => x.zone || x.buitenZone), x => x.zone || 'Zone niet ingevuld'));
+
+  tekenLijst();
+}
+
+/* ---------- lijst ---------- */
+function tekenLijst() {
+  const z = document.getElementById('zoek').value.toLowerCase().trim();
+  const items = DATA.filter(x => !z || x.tekst.toLowerCase().includes(z) || (x.ploeg || '').toLowerCase().includes(z));
+  const ploegOpties = PLOEG && PLOEG.namen ? PLOEG.namen : [];
+  document.getElementById('lijst').innerHTML = items.slice(0, 300).map(x => {
+    const wanneer = x.datum.toLocaleString('nl-BE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const acties = IN_GOOGLE ? `
+      <div class="acties">
+        ${x.herkend ? `<label class="hint">Einde
+          <input type="time" data-einde="${x.rij}" value="${x.einde ? uurMin(x.einde) : ''}" style="padding:4px 8px;font-size:13px"></label>
+          ${x.einde ? `<span class="chip">⏱ ${duur((x.einde - x.datum) / 60000)}</span>` : ''}` : ''}
+        ${x.herkend && (x.buitenZone || x.code === 'BM' || x.zone) ? `<label class="hint">Zone
+          <select data-zone="${x.rij}">
+            <option value="">${x.buitenZone ? '– kies –' : 'Eigen zone'}</option>
+            ${ZONES.map(z => `<option ${x.zone === z ? 'selected' : ''}>${z}</option>`).join('')}
+          </select></label>` : ''}
+        ${x.herkend ? `<label class="hint">Ploeg
+          <select data-ploeg="${x.rij}">
+            <option value="">Automatisch (${esc(berekenPloeg(x.datum))})</option>
+            ${ploegOpties.map(p => `<option ${x.ploegHand === p ? 'selected' : ''}>${esc(p)}</option>`).join('')}
+          </select></label>` : ''}
+        <button class="knop" data-weg="${x.rij}">Verwijderen</button>
+      </div>` : '';
+    if (!x.herkend) return `<div class="item fout"><div class="kop"><span class="type">Geen interventie / niet herkend</span><span class="wanneer">${wanneer}</span></div>
+      <div class="opm">${esc(x.tekst)}</div>${acties}</div>`;
+    return `<div class="item">
+      <div class="kop"><span class="type">${esc(x.code ? x.code + ' ' : '')}${esc(hoofdletter(x.type))}</span><span class="wanneer">${wanneer}</span></div>
+      <div class="info">${x.adres ? esc(x.adres) + ', ' : ''}${esc(x.gemeente)}${x.deel && x.deel !== x.gemeente ? ' (' + esc(x.deel) + ')' : ''}${x.zone ? ' · zone ' + esc(x.zone) : x.buitenZone ? ' · buiten de zone' : ''}</div>
+      <div class="info"><span class="chip">${esc(x.ploeg)}</span>${x.voertuig ? `<span class="chip">${esc(x.voertuig)}${x.voertuigCode ? ' · ' + esc(x.voertuigCode) : ''}</span>` : ''}${x.rol ? `<span class="chip">${esc(x.rol)}</span>` : ''}</div>
+      ${x.extra && x.extra.length ? `<div class="opm"><b>+${x.extra.length} melding(en) samengevoegd</b> (tot ${uurMin(x.extra[x.extra.length - 1].datum)}${x.extra[x.extra.length - 1].datum.toDateString() !== x.datum.toDateString() ? ' volgende dag' : ''}):<br>${x.extra.map(e => uurMin(e.datum) + ' · ' + esc(e.adres) + (e.gemeente ? ', ' + esc(e.gemeente) : '')).join('<br>')}</div>` : ''}
+      ${x.opm ? `<div class="opm">${esc(x.opm)}</div>` : ''}${acties}</div>`;
+  }).join('') || '<p class="leeg">Niets gevonden.</p>';
+}
+
+/* ---------- toevoegen ---------- */
+function lokaalNu() {
+  const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
+document.getElementById('leesUit').onclick = () => {
+  const stukken = splitsSms(document.getElementById('plak').value);
+  const el = document.getElementById('voorbeeld');
+  if (!stukken.length) { el.innerHTML = '<p class="leeg">Geen berichten gevonden.</p>'; return; }
+  el.innerHTML = `<table><tr><th>Datum &amp; uur</th><th>Uitgelezen</th></tr>` + stukken.map((s, i) => {
+    const p = leesSms(s);
+    return `<tr><td><input type="datetime-local" data-i="${i}" value="${lokaalNu()}"></td>
+      <td>${p.herkend ? `<b>${esc(p.code)} ${esc(hoofdletter(p.type))}</b><br>${esc(p.gemeente)} · ${esc(p.voertuig || 'geen voertuig')}`
+                      : '<span style="color:var(--accent)">Niet herkend</span>'}</td></tr>`;
+  }).join('') + `</table><p><button class="knop hoofd" id="opslaan">${stukken.length} bericht(en) opslaan</button></p>`;
+  document.getElementById('opslaan').onclick = () => {
+    const lijst = stukken.map((s, i) => ({ tekst: s, datum: new Date(el.querySelector(`[data-i="${i}"]`).value).toISOString() }));
+    if (!IN_GOOGLE) { alert('Demo: niet opgeslagen.'); return; }
+    document.getElementById('opslaan').disabled = true;
+    google.script.run.withSuccessHandler(n => {
+      el.innerHTML = `<p>${n} bericht(en) opgeslagen.</p>`;
+      document.getElementById('plak').value = '';
+      laad();
+    }).withFailureHandler(e => alert('Fout: ' + e.message)).voegToe(SLEUTEL, lijst);
+  };
+};
+
+/* ---------- interactie ---------- */
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('actief', x === b));
+  document.querySelectorAll('main > section').forEach(s => s.classList.toggle('verborgen', s.id !== 'tab-' + b.dataset.tab));
+});
+['fJaar', 'fCat', 'fGem'].forEach(id => document.getElementById(id).onchange = tekenAlles);
+document.getElementById('zoek').oninput = tekenLijst;
+
+document.addEventListener('click', e => {
+  const open = e.target.closest('[data-open]');
+  if (open) { OPEN[open.dataset.open] = !OPEN[open.dataset.open]; tekenAlles(); return; }
+  const weg = e.target.closest('[data-weg]');
+  if (weg) {
+    const rij = +weg.dataset.weg;
+    const x = DATA.find(d => d.rij === rij);
+    if (x && confirm('Deze interventie verwijderen?')) {
+      google.script.run.withSuccessHandler(laad).withFailureHandler(er => alert(er.message)).verwijder(SLEUTEL, rij, x.tekst);
+    }
+  }
+});
+function blokken(lijst) {
+  // interventies zonder einduur tellen mee als blok van het minimum (2u), werkelijke duur onbekend
+  const items = lijst.slice().sort((a, b) => a.datum - b.datum);
+  const res = [];
+  items.forEach(x => {
+    const eind = x.einde && x.einde > x.datum ? x.einde : x.datum;
+    const vorige = res[res.length - 1];
+    if (vorige && x.datum - vorige.eind <= BETALING.koppelMin * 60000) {
+      if (eind > vorige.eind) vorige.eind = eind;
+      vorige.items.push(x);
+    } else {
+      res.push({ start: x.datum, eind, items: [x] });
+    }
+  });
+  res.forEach(b => {
+    b.minuten = Math.round((b.eind - b.start) / 60000);
+    b.betaald = Math.max(BETALING.minUren, Math.ceil(b.minuten / 60));
+  });
+  return res;
+}
+function uurMin(d) { return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function duur(min, kort) {
+  if (!min || min < 0) return kort ? '0u' : '–';
+  const u = Math.floor(min / 60), m = Math.round(min % 60);
+  return kort ? (u + (m >= 30 ? 1 : 0)) + 'u' : (u ? u + 'u ' : '') + m + 'min';
+}
+document.addEventListener('change', e => {
+  const ei = e.target.closest('[data-einde]');
+  if (ei) {
+    const rij = +ei.dataset.einde;
+    const x = DATA.find(d => d.rij === rij);
+    if (!x) return;
+    let iso = '';
+    if (ei.value) {
+      const [h, m] = ei.value.split(':').map(Number);
+      const eind = new Date(x.datum);
+      eind.setHours(h, m, 0, 0);
+      if (eind <= x.datum) eind.setDate(eind.getDate() + 1); // over middernacht
+      iso = eind.toISOString();
+    }
+    google.script.run.withSuccessHandler(laad).withFailureHandler(er => alert(er.message)).zetEinde(SLEUTEL, rij, iso, x.tekst);
+    return;
+  }
+  const zs = e.target.closest('[data-zone]');
+  if (zs) {
+    const x = DATA.find(d => d.rij === +zs.dataset.zone);
+    if (x) google.script.run.withSuccessHandler(laad).withFailureHandler(er => alert(er.message)).zetZone(SLEUTEL, x.rij, zs.value, x.tekst);
+    return;
+  }
+  const s = e.target.closest('[data-ploeg]');
+  if (s) google.script.run.withSuccessHandler(laad).withFailureHandler(er => alert(er.message)).zetPloeg(SLEUTEL, +s.dataset.ploeg, s.value);
+});
+
+// tooltip (muis en tikken)
+const tip = document.getElementById('tip');
+function toonTip(e) {
+  const t = e.target.closest('[data-tip]');
+  document.querySelectorAll('.kol.aan').forEach(k => k.classList.remove('aan'));
+  if (!t) { tip.style.opacity = 0; return; }
+  if (t.classList.contains('kol')) t.classList.add('aan');
+  tip.textContent = t.dataset.tip;
+  const x = Math.min(e.clientX + 12, window.innerWidth - tip.offsetWidth - 8);
+  tip.style.left = x + 'px'; tip.style.top = (e.clientY - 34) + 'px'; tip.style.opacity = 1;
+}
+document.addEventListener('mousemove', toonTip);
+document.addEventListener('touchstart', e => toonTip(Object.assign({}, e, { target: e.target, clientX: e.touches[0].clientX, clientY: e.touches[0].clientY })), { passive: true });
+
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+laad();
+</script>
+</body>
+</html>
